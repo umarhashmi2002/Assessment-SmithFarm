@@ -1,0 +1,17 @@
+# =============================================================================
+# Smith Farms ETL Monitor — Terraform Variables
+# =============================================================================
+# Copy this file to terraform.tfvars and fill in your values.
+# Do NOT commit terraform.tfvars to version control.
+# =============================================================================
+
+location         = "westus2"
+dr_location      = "eastus2"
+environment      = "production"
+aks_node_count   = 3
+aks_node_vm_size = "Standard_D4s_v5"
+sql_sku          = "S1"
+
+# Sensitive — set via environment variable or terraform.tfvars (gitignored)
+# sql_admin_password = "your-secure-password"
+# teams_webhook_url  = "https://your-teams-webhook-url"

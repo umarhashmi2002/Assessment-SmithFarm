@@ -402,9 +402,32 @@ smith-farms-etl-monitor/
 │   │   └── types.ts              # Frontend TypeScript interfaces
 │   └── tests/                    # components/, property/
 ├── docs/                         # Infrastructure design + engineering reasoning
+├── infra/                        # Terraform IaC + Kubernetes manifests
+│   ├── main.tf                   # Root module — orchestrates all Azure resources
+│   ├── modules/                  # network, aks, database, keyvault, monitoring, acr
+│   └── k8s/                      # Kubernetes deployment manifests, network policies
 ├── docker-compose.yml
 └── README.md
 ```
+
+---
+
+## Infrastructure as Code (Terraform)
+
+The `infra/` directory contains Terraform modules that provision the Azure resources described in the infrastructure design document (`docs/part1-infrastructure-design.md`). This codifies the conceptual architecture into deployable infrastructure.
+
+| Module | Resources | Maps to Design Doc Section |
+|--------|-----------|---------------------------|
+| `network` | VNet (10.0.0.0/16), 3 subnets, NSGs | Network Topology & Security Zones |
+| `aks` | AKS cluster, system + app node pools, auto-scaling | Kubernetes Hardening |
+| `database` | Azure SQL + geo-replication failover group | Database Redundancy & Failover |
+| `keyvault` | Key Vault with RBAC, secrets via CSI driver | Security — Secrets Management |
+| `monitoring` | Log Analytics, diagnostic settings, alert rules | Monitoring & Alerting |
+| `acr` | Container Registry with managed identity pull | Azure Services |
+
+Kubernetes manifests in `infra/k8s/` define the application deployment with resource limits, health probes, HPA, PodDisruptionBudgets, and Calico network policies — all matching the design doc specifications.
+
+See [`infra/README.md`](infra/README.md) for setup instructions.
 
 ---
 

@@ -1,0 +1,127 @@
+# =============================================================================
+# ETL Monitor API — Kubernetes Deployment
+# =============================================================================
+# Matches the design doc specifications:
+#   - 3 replicas with PodDisruptionBudget (minAvailable: 2)
+#   - Resource requests/limits per design doc
+#   - Liveness, readiness, and startup probes on /health
+#   - Secrets mounted via Secrets Store CSI Driver from Key Vault
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: etl-monitor-api
+  namespace: etl-monitor
+  labels:
+    app: etl-monitor-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: etl-monitor-api
+  template:
+    metadata:
+      labels:
+        app: etl-monitor-api
+    spec:
+      nodeSelector:
+        nodepool: app
+      containers:
+        - name: api
+          image: acrsmithfarmsproduction.azurecr.io/etl-monitor-api:latest
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          env:
+            - name: PORT
+              value: "3000"
+            - name: NODE_ENV
+              value: "production"
+          # Resource limits per design doc
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          # Health probes per design doc
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            periodSeconds: 5
+            failureThreshold: 1
+          # Mount secrets from Key Vault via CSI driver
+          volumeMounts:
+            - name: secrets
+              mountPath: /mnt/secrets
+              readOnly: true
+      volumes:
+        - name: secrets
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: etl-monitor-secrets
+---
+# Service — ClusterIP for internal access, exposed via Ingress
+apiVersion: v1
+kind: Service
+metadata:
+  name: etl-monitor-api
+  namespace: etl-monitor
+spec:
+  selector:
+    app: etl-monitor-api
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP
+  type: ClusterIP
+---
+# PodDisruptionBudget — maintain availability during upgrades
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: etl-monitor-api-pdb
+  namespace: etl-monitor
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: etl-monitor-api
+---
+# HorizontalPodAutoscaler — scale on CPU (70% target per design doc)
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: etl-monitor-api-hpa
+  namespace: etl-monitor
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: etl-monitor-api
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

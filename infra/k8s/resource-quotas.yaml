@@ -1,0 +1,37 @@
+# =============================================================================
+# Resource Quotas & Limit Ranges — per design doc
+# =============================================================================
+# Prevents runaway resource consumption in the etl-monitor namespace.
+# LimitRange enforces defaults so no pod runs without resource boundaries.
+# =============================================================================
+
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: etl-monitor-limits
+  namespace: etl-monitor
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: 500m
+        memory: 256Mi
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      max:
+        cpu: "2"
+        memory: 1Gi
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: etl-monitor-quota
+  namespace: etl-monitor
+spec:
+  hard:
+    requests.cpu: "8"
+    requests.memory: 8Gi
+    limits.cpu: "16"
+    limits.memory: 16Gi
+    pods: "30"

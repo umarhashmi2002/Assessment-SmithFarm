@@ -1,0 +1,7 @@
+# Dedicated namespace for ETL Monitor workloads
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: etl-monitor
+  labels:
+    app.kubernetes.io/part-of: smith-farms

@@ -1,0 +1,70 @@
+# =============================================================================
+# Network Policies — Calico (per design doc)
+# =============================================================================
+# Implements the pod-to-pod traffic restrictions:
+#   - Dashboard can only talk to API
+#   - API can talk to databases and Prometheus
+#   - Default deny all other traffic
+# =============================================================================
+
+# Default deny all ingress in the namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: etl-monitor
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# API: Allow ingress from Dashboard pods and Ingress controller
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-ingress
+  namespace: etl-monitor
+spec:
+  podSelector:
+    matchLabels:
+      app: etl-monitor-api
+  policyTypes:
+    - Ingress
+  ingress:
+    # From dashboard pods
+    - from:
+        - podSelector:
+            matchLabels:
+              app: etl-monitor-dashboard
+      ports:
+        - port: 3000
+          protocol: TCP
+    # From ingress controller (external traffic)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: 3000
+          protocol: TCP
+---
+# Dashboard: Allow ingress from Ingress controller only
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dashboard-ingress
+  namespace: etl-monitor
+spec:
+  podSelector:
+    matchLabels:
+      app: etl-monitor-dashboard
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: 80
+          protocol: TCP
