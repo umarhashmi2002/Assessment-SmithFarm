@@ -209,11 +209,11 @@ erDiagram
 | Pipeline | Source | Count | Status Mix |
 |----------|--------|-------|------------|
 | `oracle-inventory-sync` | oracle | ~10 | 70% success, 20% failure, 10% running |
-| `oracle-supplier-update` | oracle | ~9 | 70% success, 20% failure, 10% running |
+| `oracle-supplier-feed` | oracle | ~9 | 70% success, 20% failure, 10% running |
 | `doris-sales-etl` | doris | ~9 | 70% success, 20% failure, 10% running |
-| `doris-warehouse-sync` | doris | ~9 | 70% success, 20% failure, 10% running |
+| `doris-warehouse-metrics` | doris | ~9 | 70% success, 20% failure, 10% running |
 | `azure-reporting-load` | azure_db | ~9 | 70% success, 20% failure, 10% running |
-| `azure-analytics-refresh` | azure_db | ~9 | 70% success, 20% failure, 10% running |
+| `azure-customer-sync` | azure_db | ~9 | 70% success, 20% failure, 10% running |
 | **Total** | | **55 records** | Spread across 7 days |
 
 ---
@@ -245,7 +245,7 @@ flowchart TD
 | Pipeline | Request body | `oracle-inventory-sync` |
 | Data Source | Request body | `oracle` |
 | Error Message | Request body | `Connection timeout to Oracle DB` |
-| Duration | Request body | `45,230 ms` |
+| Duration (ms) | Request body | `45230` |
 | Timestamp | Server-generated | `2025-01-15T03:22:41Z` |
 
 ### Alert Acknowledgment
@@ -397,7 +397,7 @@ smith-farms-etl-monitor/
 │   ├── src/
 │   │   ├── App.tsx               # Root component + routing
 │   │   ├── api/client.ts         # Axios instance with correlation ID interceptor
-│   │   ├── components/           # JobList, JobDetail, JobFilters, HealthOverview, etc.
+│   │   ├── components/           # JobList, JobDetail, JobFilters, HealthOverview, DashboardCharts, AlertBadge, Pagination, etc.
 │   │   ├── hooks/                # useJobs, useJobDetail, useHealth
 │   │   └── types.ts              # Frontend TypeScript interfaces
 │   └── tests/                    # components/, property/

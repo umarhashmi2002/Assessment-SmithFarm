@@ -20,8 +20,8 @@ export const jobListQuerySchema = z.object({
   cursor: z.string().optional(),
   status: z.enum(['success', 'failure', 'running']).optional(),
   pipeline: z.string().optional(),
-  from: z.string().datetime().optional(),
-  to: z.string().datetime().optional(),
+  from: z.string().refine((v) => !isNaN(Date.parse(v)), { message: 'Invalid date format' }).optional(),
+  to: z.string().refine((v) => !isNaN(Date.parse(v)), { message: 'Invalid date format' }).optional(),
 });
 
 const router = Router();
